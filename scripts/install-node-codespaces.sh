@@ -8,6 +8,7 @@ readonly WINGS_COMPOSE_FILE="${PROJECT_DIR}/docker-compose.wings.codespaces.yml"
 readonly PANEL_ENV_FILE="${PROJECT_DIR}/.codespaces/.env"
 readonly PHP_HELPER="${PROJECT_DIR}/scripts/provision-codespaces-node.php"
 readonly UI_LIBRARY="${PROJECT_DIR}/scripts/lib/astra-ui.sh"
+readonly PORT_HELPER="${PROJECT_DIR}/scripts/publish-codespaces-ports.sh"
 
 [[ -f "${UI_LIBRARY}" ]] || { printf 'Biblioteca visual do Astra Panel não encontrada.\n' >&2; exit 1; }
 # shellcheck disable=SC1090
@@ -143,23 +144,6 @@ wait_for_wings() {
   fail "O Wings nao respondeu. Os ultimos logs foram exibidos acima."
 }
 
-publish_wings_port() {
-  local attempt
-
-  printf '\nPorta detectada pelo Codespaces: http://localhost:%s\n' "${WINGS_FORWARD_PORT}"
-  command -v gh >/dev/null 2>&1 || return 1
-  gh auth status >/dev/null 2>&1 || return 1
-
-  for ((attempt = 1; attempt <= 10; attempt++)); do
-    if gh codespace ports visibility "${WINGS_FORWARD_PORT}:public" -c "${CODESPACE_NAME}" >/dev/null 2>&1; then
-      return
-    fi
-    sleep 3
-  done
-
-  return 1
-}
-
 check_panel_connection() {
   local attempt
 
@@ -182,6 +166,7 @@ command -v docker >/dev/null 2>&1 || fail "O comando docker nao esta instalado."
 [[ -n "${CODESPACE_NAME:-}" ]] || fail "Este instalador deve ser executado dentro do GitHub Codespaces."
 [[ -f "${PANEL_ENV_FILE}" ]] || fail "Instale o Panel primeiro executando bash scripts/install-codespaces.sh."
 [[ -f "${PHP_HELPER}" ]] || fail "O helper de criacao do node nao foi encontrado."
+[[ -f "${PORT_HELPER}" ]] || fail "O reparador de portas nao foi encontrado."
 
 select_docker_command
 astra_banner
@@ -262,13 +247,8 @@ chmod 600 "${WINGS_CONFIG_DIR}/config.yml"
 astra_run "Iniciando o Wings oficial v1.12.2" "${COMPOSE[@]}" up --detach --force-recreate wings
 wait_for_wings
 
-PORT_IS_PUBLIC=false
-if publish_wings_port; then
-  PORT_IS_PUBLIC=true
-  info "A porta ${WINGS_FORWARD_PORT} foi configurada como publica para o Panel acessar o node."
-else
-  warning "Nao consegui tornar a porta ${WINGS_FORWARD_PORT} publica automaticamente. Na aba PORTAS, altere a visibilidade dela para Publica."
-fi
+astra_run "Publicando portas e validando CORS" bash "${PORT_HELPER}"
+PORT_IS_PUBLIC=true
 
 NODE_IS_CONNECTED=false
 if [[ "${PORT_IS_PUBLIC}" == "true" ]] && check_panel_connection; then

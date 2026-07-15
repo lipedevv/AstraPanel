@@ -52,7 +52,14 @@ bash scripts/install-node-codespaces.sh
 O script usa os recursos disponiveis no Codespace, configura a porta HTTPS do Wings e valida a conexao autenticada
 entre o Panel e o node. A porta `8081` precisa ficar publica para que o Panel consiga acessar o Wings; o instalador
 tenta fazer isso automaticamente com o GitHub CLI. Se a visibilidade voltar para privada depois de reiniciar o
-Codespace, execute o mesmo script novamente.
+Codespace, repare as portas e valide o CORS com:
+
+```bash
+cd /workspaces/AstraPanel
+bash scripts/publish-codespaces-ports.sh
+```
+
+Esse reparo torna `8080` e `8081` publicas e confirma que o navegador pode enviar uploads diretamente ao Wings.
 
 As allocations podem executar containers de jogos. Para acessar uma porta TCP somente do seu computador, use o
 GitHub CLI local, mantendo o comando aberto, e conecte o jogo em `localhost`:
