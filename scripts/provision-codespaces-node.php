@@ -40,6 +40,9 @@ $memory = (int) requiredEnvironment('NODE_MEMORY_MB');
 $disk = (int) requiredEnvironment('NODE_DISK_MB');
 $allocationIp = requiredEnvironment('ALLOCATION_IP');
 $allocationPorts = array_values(array_filter(explode(',', requiredEnvironment('ALLOCATION_PORTS'))));
+$dockerNetworkName = requiredEnvironment('WINGS_NETWORK_NAME');
+$dockerNetworkSubnet = requiredEnvironment('WINGS_NETWORK_SUBNET');
+$dockerNetworkGateway = requiredEnvironment('WINGS_NETWORK_GATEWAY');
 
 if (!preg_match('/^[a-z0-9.-]+$/i', $nodeFqdn)) {
     throw new RuntimeException('NODE_FQDN contains invalid characters.');
@@ -55,6 +58,15 @@ if ($memory < 1024 || $disk < 2048) {
 }
 if (filter_var($allocationIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) === false) {
     throw new RuntimeException('ALLOCATION_IP must be a valid IPv4 address.');
+}
+if (!preg_match('/^[a-zA-Z0-9_.-]+$/', $dockerNetworkName)) {
+    throw new RuntimeException('WINGS_NETWORK_NAME contains invalid characters.');
+}
+if (!preg_match('#^(?:\d{1,3}\.){3}\d{1,3}/\d{1,2}$#', $dockerNetworkSubnet)) {
+    throw new RuntimeException('WINGS_NETWORK_SUBNET must be a valid IPv4 CIDR range.');
+}
+if (filter_var($dockerNetworkGateway, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) === false) {
+    throw new RuntimeException('WINGS_NETWORK_GATEWAY must be a valid IPv4 address.');
 }
 
 $location = Location::query()->firstOrCreate(
@@ -109,13 +121,13 @@ $configuration['api']['host'] = '0.0.0.0';
 $configuration['api']['port'] = 8080;
 $configuration['api']['ssl']['enabled'] = false;
 $configuration['docker']['network'] = [
-    'interface' => '172.30.0.1',
-    'name' => 'astra_panel_games',
-    'network_mode' => 'astra_panel_games',
+    'interface' => $dockerNetworkGateway,
+    'name' => $dockerNetworkName,
+    'network_mode' => $dockerNetworkName,
     'interfaces' => [
         'v4' => [
-            'subnet' => '172.30.0.0/16',
-            'gateway' => '172.30.0.1',
+            'subnet' => $dockerNetworkSubnet,
+            'gateway' => $dockerNetworkGateway,
         ],
     ],
 ];

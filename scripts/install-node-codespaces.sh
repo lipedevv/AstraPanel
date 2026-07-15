@@ -46,6 +46,47 @@ prepare_runtime_directory() {
   as_root install -d -m 0755 -o 988 -g 988 "${WINGS_RUN_DIR}" "${WINGS_RUN_DIR}/machine-id"
 }
 
+select_game_network() {
+  local candidate gateway subnet
+  local -a candidates=(
+    '172.31.0.0/16:172.31.0.1'
+    '172.29.0.0/16:172.29.0.1'
+    '10.250.0.0/16:10.250.0.1'
+    '10.251.0.0/16:10.251.0.1'
+    '192.168.240.0/20:192.168.240.1'
+  )
+
+  # Reuse an existing network first. Older Astra installations used the
+  # upstream name, and reusing it avoids disconnecting existing servers.
+  for WINGS_NETWORK_NAME in astra_panel_games pterodactyl_codespaces; do
+    if "${DOCKER[@]}" network inspect "${WINGS_NETWORK_NAME}" >/dev/null 2>&1; then
+      WINGS_NETWORK_SUBNET="$("${DOCKER[@]}" network inspect \
+        --format '{{(index .IPAM.Config 0).Subnet}}' "${WINGS_NETWORK_NAME}")"
+      WINGS_NETWORK_GATEWAY="$("${DOCKER[@]}" network inspect \
+        --format '{{(index .IPAM.Config 0).Gateway}}' "${WINGS_NETWORK_NAME}")"
+      export WINGS_NETWORK_NAME WINGS_NETWORK_SUBNET WINGS_NETWORK_GATEWAY
+      astra_info "Reutilizando a rede de jogos ${WINGS_NETWORK_NAME} (${WINGS_NETWORK_SUBNET})."
+      return
+    fi
+  done
+
+  WINGS_NETWORK_NAME='astra_panel_games'
+  for candidate in "${candidates[@]}"; do
+    subnet="${candidate%%:*}"
+    gateway="${candidate##*:}"
+    if "${DOCKER[@]}" network create --driver bridge \
+      --subnet "${subnet}" --gateway "${gateway}" "${WINGS_NETWORK_NAME}" >/dev/null 2>&1; then
+      WINGS_NETWORK_SUBNET="${subnet}"
+      WINGS_NETWORK_GATEWAY="${gateway}"
+      export WINGS_NETWORK_NAME WINGS_NETWORK_SUBNET WINGS_NETWORK_GATEWAY
+      astra_success "Rede de jogos criada em ${WINGS_NETWORK_SUBNET}."
+      return
+    fi
+  done
+
+  fail "Não foi possível encontrar uma faixa de rede Docker livre para os servidores."
+}
+
 select_docker_command() {
   if docker info >/dev/null 2>&1; then
     DOCKER=(docker)
@@ -180,6 +221,7 @@ mkdir -p \
   "${WINGS_STATE_DIR}/tmp"
 
 prepare_runtime_directory
+select_game_network
 
 COMPOSE=(
   "${DOCKER[@]}" compose
@@ -204,6 +246,9 @@ NODE_ID="$("${COMPOSE[@]}" exec -T \
   -e "NODE_DISK_MB=${NODE_DISK_MB}" \
   -e "ALLOCATION_IP=${ALLOCATION_IP}" \
   -e "ALLOCATION_PORTS=${ALLOCATION_PORTS}" \
+  -e "WINGS_NETWORK_NAME=${WINGS_NETWORK_NAME}" \
+  -e "WINGS_NETWORK_SUBNET=${WINGS_NETWORK_SUBNET}" \
+  -e "WINGS_NETWORK_GATEWAY=${WINGS_NETWORK_GATEWAY}" \
   panel php /tmp/provision-codespaces-node.php | tr -d '[:space:]')"
 export NODE_ID
 [[ "${NODE_ID}" =~ ^[0-9]+$ ]] || fail "O Panel nao retornou um ID de node valido."
@@ -237,6 +282,7 @@ printf 'Wings URL:     https://%s\n' "${NODE_FQDN}"
 printf 'Memoria:       %s MB\n' "${NODE_MEMORY_MB}"
 printf 'Disco:         %s MB\n' "${NODE_DISK_MB}"
 printf 'Allocations:   %s (%s)\n' "${ALLOCATION_IP}" "${ALLOCATION_PORTS}"
+printf 'Rede Docker:   %s (%s)\n' "${WINGS_NETWORK_NAME}" "${WINGS_NETWORK_SUBNET}"
 
 if [[ "${NODE_IS_CONNECTED}" == "true" ]]; then
   printf 'Status:        conectado ao Panel\n'
