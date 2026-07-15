@@ -55,7 +55,11 @@ const terminalProps: ITerminalOptions = {
 export default () => {
     const TERMINAL_PRELUDE = '\u001b[1m\u001b[36mcontainer@astra~ \u001b[0m';
     const brandConsoleLine = (line: string) =>
-        line.replace(/\[Pterodactyl Daemon\]/gi, '[Astra Wings]').replace(/Pterodactyl Daemon/gi, 'Astra Wings');
+        line
+            .replace(/\[Pterodactyl Daemon\]/gi, '[Astra Wings]')
+            .replace(/(?:ghcr\.io\/)?pterodactyl\/yolks/gi, 'astra/runtime')
+            .replace(/Pterodactyl (?:Daemon|Wings)/gi, 'Astra Wings')
+            .replace(/Pterodactyl/gi, 'Astra');
     const ref = useRef<HTMLDivElement>(null);
     const terminal = useMemo(() => new Terminal({ ...terminalProps }), []);
     const fitAddon = new FitAddon();
