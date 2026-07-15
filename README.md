@@ -61,6 +61,11 @@ bash scripts/publish-codespaces-ports.sh
 
 Esse reparo torna `8080` e `8081` publicas e confirma que o navegador pode enviar uploads diretamente ao Wings.
 
+Arquivos maiores que 8 MB sao enviados automaticamente em partes pelo Astra Panel. Isso contorna o
+[limite fixo de 16 MB por requisicao do Azure Dev Tunnels](https://learn.microsoft.com/azure/azure-resource-manager/management/azure-subscription-service-limits#dev-tunnels-limits),
+usado pelo GitHub Codespaces; ao final, o Panel remonta o arquivo e o envia ao Wings pela rede Docker interna. O
+limite total continua sendo o configurado no node (100 MB por padrao).
+
 As allocations podem executar containers de jogos. Para acessar uma porta TCP somente do seu computador, use o
 GitHub CLI local, mantendo o comando aberto, e conecte o jogo em `localhost`:
 

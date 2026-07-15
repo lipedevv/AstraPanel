@@ -1,4 +1,5 @@
 import axios, { AxiosProgressEvent } from 'axios';
+import http from '@/api/http';
 import getFileUploadUrl from '@/api/server/files/getFileUploadUrl';
 import tw from 'twin.macro';
 import { Button } from '@/components/elements/button/index';
@@ -13,6 +14,11 @@ import { WithClassname } from '@/components/types';
 import Portal from '@/components/elements/Portal';
 import { CloudUploadIcon } from '@heroicons/react/outline';
 import { useSignal } from '@preact/signals-react';
+
+// Azure Dev Tunnels, which powers Codespaces port forwarding, rejects HTTP
+// request bodies larger than 16 MiB. Keep each request comfortably below that
+// limit and let the Panel stream the assembled file to Wings internally.
+const CODESPACES_CHUNK_SIZE = 8 * 1024 * 1024;
 
 function isFileOrDirectory(event: DragEvent): boolean {
     if (!event.dataTransfer?.types) {
@@ -61,6 +67,30 @@ export default ({ className }: WithClassname) => {
         setUploadProgress({ name, loaded: data.loaded });
     };
 
+    const uploadInChunks = async (file: File, controller: AbortController) => {
+        const chunks = Math.ceil(file.size / CODESPACES_CHUNK_SIZE);
+        const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+
+        for (let index = 0; index < chunks; index++) {
+            const offset = index * CODESPACES_CHUNK_SIZE;
+            const body = new FormData();
+            body.append('upload_id', uploadId);
+            body.append('chunk_index', index.toString());
+            body.append('chunks_total', chunks.toString());
+            body.append('file_name', file.name);
+            body.append('directory', directory);
+            body.append('chunk', file.slice(offset, offset + CODESPACES_CHUNK_SIZE), `${file.name}.part`);
+
+            await http.post(`/api/client/servers/${uuid}/files/upload/chunk`, body, {
+                signal: controller.signal,
+                timeout: 0,
+                headers: { 'Content-Type': 'multipart/form-data' },
+                onUploadProgress: (data) =>
+                    setUploadProgress({ name: file.name, loaded: Math.min(file.size, offset + data.loaded) }),
+            });
+        }
+    };
+
     const onFileSubmission = (files: FileList) => {
         clearAndAddHttpError();
         const list = Array.from(files);
@@ -75,21 +105,25 @@ export default ({ className }: WithClassname) => {
                 data: { abort: controller, loaded: 0, total: file.size },
             });
 
-            return () =>
-                getFileUploadUrl(uuid).then((url) =>
-                    axios
-                        .post(
-                            url,
-                            { files: file },
-                            {
-                                signal: controller.signal,
-                                headers: { 'Content-Type': 'multipart/form-data' },
-                                params: { directory },
-                                onUploadProgress: (data) => onUploadProgress(data, file.name),
-                            }
-                        )
-                        .then(() => timeouts.value.push(setTimeout(() => removeFileUpload(file.name), 500)))
-                );
+            return () => {
+                const upload =
+                    file.size > CODESPACES_CHUNK_SIZE
+                        ? uploadInChunks(file, controller)
+                        : getFileUploadUrl(uuid).then((url) =>
+                              axios.post(
+                                  url,
+                                  { files: file },
+                                  {
+                                      signal: controller.signal,
+                                      headers: { 'Content-Type': 'multipart/form-data' },
+                                      params: { directory },
+                                      onUploadProgress: (data) => onUploadProgress(data, file.name),
+                                  }
+                              )
+                          );
+
+                return upload.then(() => timeouts.value.push(setTimeout(() => removeFileUpload(file.name), 500)));
+            };
         });
 
         Promise.all(uploads.map((fn) => fn()))
