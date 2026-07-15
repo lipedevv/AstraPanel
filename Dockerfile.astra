@@ -17,6 +17,7 @@ COPY resources/lang /app/resources/lang
 COPY app/Traits/Helpers/AvailableLanguages.php /app/app/Traits/Helpers/AvailableLanguages.php
 COPY app/Http/Requests/Base/LocaleRequest.php /app/app/Http/Requests/Base/LocaleRequest.php
 COPY app/Http/Controllers/Base/LocaleController.php /app/app/Http/Controllers/Base/LocaleController.php
+COPY app/Notifications/MailTested.php /app/app/Notifications/MailTested.php
 COPY config/app.php /app/config/app.php
 COPY config/mail.php /app/config/mail.php
 RUN chown -R nginx:nginx /app/public/assets /app/resources /app/app /app/config

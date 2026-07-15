@@ -29,7 +29,7 @@
                 @if ($version->isLatestPanel())
                     You are running Astra Panel (core <code>{{ config('app.version') }}</code>). Your panel is up-to-date!
                 @else
-                    The Pterodactyl core has an update available. Astra Panel updates are installed with <code>bash scripts/update-codespaces.sh</code>.
+                    The upstream core has an update available. Astra Panel updates are installed with <code>bash scripts/update-codespaces.sh</code>.
                 @endif
             </div>
         </div>

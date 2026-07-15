@@ -54,6 +54,8 @@ const terminalProps: ITerminalOptions = {
 
 export default () => {
     const TERMINAL_PRELUDE = '\u001b[1m\u001b[36mcontainer@astra~ \u001b[0m';
+    const brandConsoleLine = (line: string) =>
+        line.replace(/\[Pterodactyl Daemon\]/gi, '[Astra Wings]').replace(/Pterodactyl Daemon/gi, 'Astra Wings');
     const ref = useRef<HTMLDivElement>(null);
     const terminal = useMemo(() => new Terminal({ ...terminalProps }), []);
     const fitAddon = new FitAddon();
@@ -75,7 +77,9 @@ export default () => {
     }`;
 
     const handleConsoleOutput = (line: string, prelude = false) =>
-        terminal.writeln((prelude ? TERMINAL_PRELUDE : '') + line.replace(/(?:\r\n|\r|\n)$/im, '') + '\u001b[0m');
+        terminal.writeln(
+            (prelude ? TERMINAL_PRELUDE : '') + brandConsoleLine(line).replace(/(?:\r\n|\r|\n)$/im, '') + '\u001b[0m'
+        );
 
     const handleTransferStatus = (status: string) => {
         switch (status) {
@@ -88,7 +92,10 @@ export default () => {
 
     const handleDaemonErrorOutput = (line: string) =>
         terminal.writeln(
-            TERMINAL_PRELUDE + '\u001b[1m\u001b[41m' + line.replace(/(?:\r\n|\r|\n)$/im, '') + '\u001b[0m'
+            TERMINAL_PRELUDE +
+                '\u001b[1m\u001b[41m' +
+                brandConsoleLine(line).replace(/(?:\r\n|\r|\n)$/im, '') +
+                '\u001b[0m'
         );
 
     const handlePowerChangeEvent = (state: string) =>

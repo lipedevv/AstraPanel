@@ -1,5 +1,6 @@
 services:
   wings:
+    container_name: astra-panel-wings
     image: ghcr.io/pterodactyl/wings:v1.12.2
     restart: unless-stopped
     tty: true

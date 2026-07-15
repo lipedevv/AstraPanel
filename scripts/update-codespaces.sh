@@ -109,8 +109,7 @@ astra_run "Recriando os serviços" "${COMPOSE[@]}" up --detach
 wait_for_panel
 
 if [[ -f "${PROJECT_DIR}/.codespaces/wings/etc/config.yml" && -f "${WINGS_COMPOSE_FILE}" ]]; then
-  WINGS_COMPOSE=("${COMPOSE[@]}" -f "${WINGS_COMPOSE_FILE}")
-  astra_run "Atualizando o node Wings" "${WINGS_COMPOSE[@]}" up --detach --force-recreate wings
+  astra_run "Reparando e atualizando o node Wings" bash "${PROJECT_DIR}/scripts/install-node-codespaces.sh"
 fi
 
 NEW_COMMIT="$(git -C "${PROJECT_DIR}" rev-parse --short HEAD)"

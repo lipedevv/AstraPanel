@@ -66,11 +66,18 @@ Jogadores externos e jogos que dependem de UDP ainda precisam de um tunel apropr
 ### Atualizacao segura
 
 O atualizador verifica o repositorio, cria um backup compactado do banco, baixa a versao nova, reconstroi a interface
-e recria Panel e Wings sem apagar os volumes:
+e recria Panel e Wings sem apagar os volumes. Ele tambem reaplica a configuracao do node e repara os diretorios de
+runtime usados pelos containers dos jogos:
 
 ```bash
 cd /workspaces/AstraPanel
 bash scripts/update-codespaces.sh
+```
+
+Ou, de qualquer terminal do Codespace, execute o atualizador mais recente em uma unica linha:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/lipedevv/AstraPanel/master/update.sh | bash
 ```
 
 Os backups ficam em `.codespaces/backups` e os logs detalhados em `.codespaces/logs`. Use `ASTRA_VERBOSE=1` antes do

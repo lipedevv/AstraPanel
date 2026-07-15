@@ -107,8 +107,8 @@ $configuration['system']['backup_directory'] = $stateDirectory . '/backups';
 $configuration['system']['tmp_directory'] = $stateDirectory . '/tmp';
 $configuration['docker']['network'] = [
     'interface' => '172.30.0.1',
-    'name' => 'pterodactyl_codespaces',
-    'network_mode' => 'pterodactyl_codespaces',
+    'name' => 'astra_panel_games',
+    'network_mode' => 'astra_panel_games',
     'interfaces' => [
         'v4' => [
             'subnet' => '172.30.0.0/16',
@@ -117,7 +117,7 @@ $configuration['docker']['network'] = [
     ],
 ];
 
-$temporaryConfiguration = '/tmp/pterodactyl-codespaces-wings.yml';
+$temporaryConfiguration = '/tmp/astra-panel-codespaces-wings.yml';
 file_put_contents(
     $temporaryConfiguration,
     Yaml::dump($configuration, 8, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE)

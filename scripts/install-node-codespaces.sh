@@ -28,6 +28,24 @@ fail() {
   astra_fail "$1"
 }
 
+as_root() {
+  if [[ "$(id -u)" -eq 0 ]]; then
+    "$@"
+  elif command -v sudo >/dev/null 2>&1; then
+    sudo "$@"
+  else
+    fail "Esta etapa precisa de acesso administrativo e o comando sudo não está disponível."
+  fi
+}
+
+prepare_runtime_directory() {
+  # Game containers are created by the host Docker daemon. Therefore this path
+  # must be identical inside Wings and on the Codespace host.
+  [[ "${WINGS_RUN_DIR}" == "/run/wings" ]] \
+    || fail "WINGS_RUN_DIR deve permanecer em /run/wings no GitHub Codespaces."
+  as_root install -d -m 0755 -o 988 -g 988 "${WINGS_RUN_DIR}" "${WINGS_RUN_DIR}/machine-id"
+}
+
 select_docker_command() {
   if docker info >/dev/null 2>&1; then
     DOCKER=(docker)
@@ -139,7 +157,7 @@ export WINGS_FORWARD_PORT="${WINGS_FORWARD_PORT:-8081}"
 export WINGS_SFTP_PORT="${WINGS_SFTP_PORT:-2022}"
 export WINGS_STATE_DIR="${PROJECT_DIR}/.codespaces/wings"
 export WINGS_CONFIG_DIR="${WINGS_STATE_DIR}/etc"
-export WINGS_RUN_DIR="${WINGS_STATE_DIR}/run"
+export WINGS_RUN_DIR="/run/wings"
 export NODE_NAME="${WINGS_NODE_NAME:-Codespaces Node}"
 export NODE_FQDN="${CODESPACE_NAME}-${WINGS_FORWARD_PORT}.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}"
 export NODE_MEMORY_MB NODE_DISK_MB
@@ -155,12 +173,13 @@ fi
 
 mkdir -p \
   "${WINGS_CONFIG_DIR}" \
-  "${WINGS_RUN_DIR}" \
   "${WINGS_STATE_DIR}/volumes" \
   "${WINGS_STATE_DIR}/logs" \
   "${WINGS_STATE_DIR}/archives" \
   "${WINGS_STATE_DIR}/backups" \
   "${WINGS_STATE_DIR}/tmp"
+
+prepare_runtime_directory
 
 COMPOSE=(
   "${DOCKER[@]}" compose
@@ -191,7 +210,7 @@ export NODE_ID
 
 umask 077
 rm -f "${WINGS_CONFIG_DIR}/config.yml.new"
-"${COMPOSE[@]}" cp panel:/tmp/pterodactyl-codespaces-wings.yml "${WINGS_CONFIG_DIR}/config.yml.new"
+"${COMPOSE[@]}" cp panel:/tmp/astra-panel-codespaces-wings.yml "${WINGS_CONFIG_DIR}/config.yml.new"
 mv -f "${WINGS_CONFIG_DIR}/config.yml.new" "${WINGS_CONFIG_DIR}/config.yml"
 chmod 600 "${WINGS_CONFIG_DIR}/config.yml"
 
@@ -227,4 +246,4 @@ else
 fi
 
 printf '\nPara acompanhar os logs: %s\n' \
-  "docker logs pterodactyl-codespaces-wings-1 -f"
+  "docker logs astra-panel-wings -f"
