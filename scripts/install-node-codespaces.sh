@@ -7,20 +7,25 @@ readonly BASE_COMPOSE_FILE="${PROJECT_DIR}/docker-compose.codespaces.yml"
 readonly WINGS_COMPOSE_FILE="${PROJECT_DIR}/docker-compose.wings.codespaces.yml"
 readonly PANEL_ENV_FILE="${PROJECT_DIR}/.codespaces/.env"
 readonly PHP_HELPER="${PROJECT_DIR}/scripts/provision-codespaces-node.php"
+readonly UI_LIBRARY="${PROJECT_DIR}/scripts/lib/astra-ui.sh"
+
+[[ -f "${UI_LIBRARY}" ]] || { printf 'Biblioteca visual do Astra Panel não encontrada.\n' >&2; exit 1; }
+# shellcheck disable=SC1090
+source "${UI_LIBRARY}"
+export ASTRA_LOG_FILE="${PROJECT_DIR}/.codespaces/logs/node-install.log"
 
 declare -a COMPOSE DOCKER
 
 info() {
-  printf '\n[Pterodactyl Node] %s\n' "$1"
+  astra_info "$1"
 }
 
 warning() {
-  printf '\n[Pterodactyl Node] AVISO: %s\n' "$1" >&2
+  astra_warning "$1"
 }
 
 fail() {
-  printf '\n[Pterodactyl Node] ERRO: %s\n' "$1" >&2
-  exit 1
+  astra_fail "$1"
 }
 
 select_docker_command() {
@@ -120,6 +125,8 @@ command -v docker >/dev/null 2>&1 || fail "O comando docker nao esta instalado."
 [[ -f "${PHP_HELPER}" ]] || fail "O helper de criacao do node nao foi encontrado."
 
 select_docker_command
+astra_banner
+astra_section "Configurando o node Wings"
 
 set -a
 # shellcheck disable=SC1090
@@ -166,8 +173,7 @@ COMPOSE=(
 "${COMPOSE[@]}" ps --status running panel | grep -q panel \
   || fail "O container do Panel nao esta em execucao. Rode bash scripts/install-codespaces.sh primeiro."
 
-info "Registrando o node e as allocations no Panel..."
-"${COMPOSE[@]}" cp "${PHP_HELPER}" panel:/tmp/provision-codespaces-node.php
+astra_run "Enviando o provisionador para o Astra Panel" "${COMPOSE[@]}" cp "${PHP_HELPER}" panel:/tmp/provision-codespaces-node.php
 
 NODE_ID="$("${COMPOSE[@]}" exec -T \
   -e NODE_ACTION=provision \
@@ -189,8 +195,7 @@ rm -f "${WINGS_CONFIG_DIR}/config.yml.new"
 mv -f "${WINGS_CONFIG_DIR}/config.yml.new" "${WINGS_CONFIG_DIR}/config.yml"
 chmod 600 "${WINGS_CONFIG_DIR}/config.yml"
 
-info "Iniciando o Wings oficial v1.12.2..."
-"${COMPOSE[@]}" up --detach --force-recreate wings
+astra_run "Iniciando o Wings oficial v1.12.2" "${COMPOSE[@]}" up --detach --force-recreate wings
 wait_for_wings
 
 PORT_IS_PUBLIC=false
@@ -206,9 +211,8 @@ if [[ "${PORT_IS_PUBLIC}" == "true" ]] && check_panel_connection; then
   NODE_IS_CONNECTED=true
 fi
 
-printf '\n========================================\n'
-printf ' Pterodactyl Wings pronto no Codespaces\n'
-printf '========================================\n'
+astra_section "Node concluído"
+astra_success "Wings está pronto no Astra Panel"
 printf 'Node ID:       %s\n' "${NODE_ID}"
 printf 'Wings URL:     https://%s\n' "${NODE_FQDN}"
 printf 'Memoria:       %s MB\n' "${NODE_MEMORY_MB}"

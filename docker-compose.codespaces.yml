@@ -1,4 +1,4 @@
-name: pterodactyl-codespaces
+name: astra-panel-codespaces
 
 services:
   database:
@@ -36,7 +36,10 @@ services:
       retries: 20
 
   panel:
-    image: ghcr.io/pterodactyl/panel:v1.14.1
+    image: astra-panel:codespaces
+    build:
+      context: .
+      dockerfile: Dockerfile.astra
     restart: unless-stopped
     depends_on:
       database:
@@ -50,6 +53,9 @@ services:
       - ./.codespaces/logs:/app/storage/logs
     environment:
       APP_ENV: production
+      APP_NAME: "${APP_NAME:-Astra Panel}"
+      APP_LOCALE: "${APP_LOCALE:-pt-BR}"
+      APP_FALLBACK_LOCALE: en
       APP_DEBUG: "false"
       APP_ENVIRONMENT_ONLY: "false"
       APP_URL: "${APP_URL:?APP_URL is required}"
@@ -73,7 +79,7 @@ services:
       MAIL_MAILER: log
       MAIL_DRIVER: log
       MAIL_FROM_ADDRESS: "${ADMIN_EMAIL:-admin@example.com}"
-      MAIL_FROM_NAME: Pterodactyl Panel
+      MAIL_FROM_NAME: "${APP_NAME:-Astra Panel}"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://127.0.0.1/ >/dev/null || exit 1"]
       interval: 10s

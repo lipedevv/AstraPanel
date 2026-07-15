@@ -1,17 +1,17 @@
-[![Logo Image](https://cdn.pterodactyl.io/logos/new/pterodactyl_logo.png)](https://pterodactyl.io)
+![Astra Panel](public/assets/svgs/astra.svg)
 
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/pterodactyl/panel/ci.yaml?label=Tests&style=for-the-badge&branch=1.0-develop)
 ![Discord](https://img.shields.io/discord/122900397965705216?label=Discord&logo=Discord&logoColor=white&style=for-the-badge)
 ![GitHub Releases](https://img.shields.io/github/downloads/pterodactyl/panel/latest/total?style=for-the-badge)
 ![GitHub contributors](https://img.shields.io/github/contributors/pterodactyl/panel?style=for-the-badge)
 
-# Pterodactyl Panel
+# Astra Panel
 
 ## Instalacao no GitHub Codespaces
 
-Este repositorio contem o **Pterodactyl Panel oficial v1.14.1**, sem trocar a interface, com uma camada adicional para
-executa-lo no GitHub Codespaces. O instalador prepara Docker, MariaDB e Redis, baixa a imagem oficial da mesma versao,
-executa as migrations e cria o primeiro administrador automaticamente.
+O **Astra Panel** e uma distribuicao do Pterodactyl v1.14.1 preparada para GitHub Codespaces. Ele mantem a base solida
+do projeto original e adiciona identidade Astra, portugues do Brasil como idioma padrao, espanhol e ingles, alem de
+instalacao, atualizacao, banco MariaDB, Redis e primeiro administrador totalmente automatizados.
 
 Em um Codespace vazio, execute somente:
 
@@ -21,7 +21,7 @@ curl -fsSL https://raw.githubusercontent.com/lipedevv/AstraPanel/master/install.
 
 Ao terminar, o terminal mostra a URL, o e-mail e a senha do administrador. As mesmas informacoes ficam salvas, com
 permissividade restrita, em `.codespaces/credentials.txt` dentro do clone (por padrao,
-`/workspaces/Pterodactyl/.codespaces/credentials.txt` para o comando acima).
+`/workspaces/AstraPanel/.codespaces/credentials.txt` para o comando acima).
 
 Para escolher o e-mail ou a senha antes da primeira instalacao:
 
@@ -33,7 +33,7 @@ curl -fsSL https://raw.githubusercontent.com/lipedevv/AstraPanel/master/install.
 Para consultar os containers e logs depois da instalacao:
 
 ```bash
-cd /workspaces/Pterodactyl
+cd /workspaces/AstraPanel
 docker compose --env-file .codespaces/.env -f docker-compose.codespaces.yml ps
 docker compose --env-file .codespaces/.env -f docker-compose.codespaces.yml logs -f panel
 ```
@@ -44,7 +44,7 @@ Depois que o Panel estiver instalado, o comando abaixo registra um node basico, 
 allocations `25565-25575`:
 
 ```bash
-cd /workspaces/Pterodactyl
+cd /workspaces/AstraPanel
 git pull --ff-only
 bash scripts/install-node-codespaces.sh
 ```
@@ -62,6 +62,19 @@ gh codespace ports forward 25565:25565 -c NOME_DO_CODESPACE
 ```
 
 Jogadores externos e jogos que dependem de UDP ainda precisam de um tunel apropriado ou de uma VPS.
+
+### Atualizacao segura
+
+O atualizador verifica o repositorio, cria um backup compactado do banco, baixa a versao nova, reconstroi a interface
+e recria Panel e Wings sem apagar os volumes:
+
+```bash
+cd /workspaces/AstraPanel
+bash scripts/update-codespaces.sh
+```
+
+Os backups ficam em `.codespaces/backups` e os logs detalhados em `.codespaces/logs`. Use `ASTRA_VERBOSE=1` antes do
+comando para acompanhar toda a saida em vez dos indicadores de carregamento.
 
 > **Importante:** esta configuracao e indicada para desenvolvimento, demonstracao e testes do **Panel e Wings**. O GitHub
 > Codespaces pode suspender a maquina e seu encaminhamento de portas nao substitui um servidor publico permanente.

@@ -19,10 +19,14 @@ trait AvailableLanguages
     {
         return collect($this->getFilesystemInstance()->directories(resource_path('lang')))->mapWithKeys(function ($path) use ($localize) {
             $code = basename($path);
-            $value = $localize ? $this->getIsoInstance()->nativeByCode1($code) : $this->getIsoInstance()->languageByCode1($code);
+            $regionalLanguages = [
+                'pt-BR' => $localize ? 'Português (Brasil)' : 'Portuguese (Brazil)',
+            ];
+            $value = $regionalLanguages[$code]
+                ?? ($localize ? $this->getIsoInstance()->nativeByCode1($code) : $this->getIsoInstance()->languageByCode1($code));
 
             return [$code => title_case($value)];
-        })->toArray();
+        })->sortKeys()->toArray();
     }
 
     /**

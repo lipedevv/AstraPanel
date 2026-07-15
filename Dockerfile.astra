@@ -1,0 +1,22 @@
+FROM node:22-alpine AS assets
+WORKDIR /build
+COPY package.json yarn.lock ./
+RUN corepack enable && yarn install --frozen-lockfile
+COPY resources ./resources
+COPY public ./public
+COPY babel.config.js postcss.config.js tailwind.config.js tsconfig.json webpack.config.js ./
+RUN yarn build:production
+
+FROM ghcr.io/pterodactyl/panel:v1.14.1
+LABEL org.opencontainers.image.title="Astra Panel" \
+      org.opencontainers.image.description="Astra Panel para GitHub Codespaces"
+COPY --from=assets /build/public/assets /app/public/assets
+COPY public/assets/svgs/astra.svg /app/public/assets/svgs/astra.svg
+COPY resources/views /app/resources/views
+COPY resources/lang /app/resources/lang
+COPY app/Traits/Helpers/AvailableLanguages.php /app/app/Traits/Helpers/AvailableLanguages.php
+COPY app/Http/Requests/Base/LocaleRequest.php /app/app/Http/Requests/Base/LocaleRequest.php
+COPY app/Http/Controllers/Base/LocaleController.php /app/app/Http/Controllers/Base/LocaleController.php
+COPY config/app.php /app/config/app.php
+COPY config/mail.php /app/config/mail.php
+RUN chown -R nginx:nginx /app/public/assets /app/resources /app/app /app/config

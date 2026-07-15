@@ -1,24 +1,33 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-readonly PTERODACTYL_REPOSITORY="https://github.com/lipedevv/AstraPanel.git"
-readonly PTERODACTYL_BRANCH="master"
+readonly ASTRA_REPOSITORY="https://github.com/lipedevv/AstraPanel.git"
+readonly ASTRA_BRANCH="master"
+
+if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
+  CYAN='\033[38;5;45m'; PURPLE='\033[38;5;141m'; RED='\033[38;5;203m'; BOLD='\033[1m'; RESET='\033[0m'
+else
+  CYAN=''; PURPLE=''; RED=''; BOLD=''; RESET=''
+fi
 
 if [[ -n "${PTERO_DIR:-}" ]]; then
   INSTALL_DIR="${PTERO_DIR}"
-elif [[ -d /workspaces && -w /workspaces ]]; then
+elif [[ -d /workspaces/Pterodactyl/.git && ! -e /workspaces/AstraPanel ]]; then
+  # Mantém compatibilidade com instalações criadas pelas versões anteriores.
   INSTALL_DIR="/workspaces/Pterodactyl"
+elif [[ -d /workspaces && -w /workspaces ]]; then
+  INSTALL_DIR="/workspaces/AstraPanel"
 else
-  INSTALL_DIR="${HOME}/Pterodactyl"
+  INSTALL_DIR="${HOME}/AstraPanel"
 fi
 readonly INSTALL_DIR
 
 info() {
-  printf '\n[Pterodactyl Codespaces] %s\n' "$1"
+  printf '\n%b◆%b %s\n' "${CYAN}" "${RESET}" "$1"
 }
 
 fail() {
-  printf '\n[Pterodactyl Codespaces] ERRO: %s\n' "$1" >&2
+  printf '\n%b✗ ERRO:%b %s\n' "${RED}${BOLD}" "${RESET}" "$1" >&2
   exit 1
 }
 
@@ -129,7 +138,7 @@ checkout_panel() {
     info "Instalacao existente encontrada em ${INSTALL_DIR}. Atualizando..."
     origin_url="$(git -C "${INSTALL_DIR}" remote get-url origin 2>/dev/null || true)"
     case "${origin_url}" in
-      "${PTERODACTYL_REPOSITORY}"|https://github.com/lipedevv/AstraPanel|git@github.com:lipedevv/AstraPanel.git)
+      "${ASTRA_REPOSITORY}"|https://github.com/lipedevv/AstraPanel|git@github.com:lipedevv/AstraPanel.git)
         ;;
       *)
         fail "O diretorio ${INSTALL_DIR} pertence a outro repositorio. Use PTERO_DIR=/outro/caminho."
@@ -140,7 +149,7 @@ checkout_panel() {
       fail "Existem alteracoes locais em ${INSTALL_DIR}. Salve ou descarte essas alteracoes antes de atualizar."
     fi
 
-    git -C "${INSTALL_DIR}" pull --ff-only origin "${PTERODACTYL_BRANCH}"
+    git -C "${INSTALL_DIR}" pull --ff-only origin "${ASTRA_BRANCH}"
     return
   fi
 
@@ -148,18 +157,22 @@ checkout_panel() {
     fail "O diretorio ${INSTALL_DIR} existe e nao esta vazio. Use PTERO_DIR=/outro/caminho."
   fi
 
-  info "Clonando o Pterodactyl Panel em ${INSTALL_DIR}..."
+  info "Clonando o Astra Panel em ${INSTALL_DIR}..."
   mkdir -p "$(dirname "${INSTALL_DIR}")"
-  git clone --depth 1 --branch "${PTERODACTYL_BRANCH}" "${PTERODACTYL_REPOSITORY}" "${INSTALL_DIR}"
+  git clone --depth 1 --branch "${ASTRA_BRANCH}" "${ASTRA_REPOSITORY}" "${INSTALL_DIR}"
 }
 
-printf '\n========================================\n'
-printf ' Instalador do Pterodactyl no Codespaces\n'
-printf '========================================\n'
+printf '\n%b' "${PURPLE}${BOLD}"
+printf '    ___        __             ____                  __\n'
+printf '   /   | _____/ /________ _  / __ \\____ _____  ___ / /\n'
+printf '  / /| |/ ___/ __/ ___/  / / /_/ / __ `/ __ \\/ _ \\/ /\n'
+printf ' / ___ (__  ) /_/ /  / /|  / ____/ /_/ / / / /  __/ /\n'
+printf '/_/  |_/____/\\__/_/  /_/ |_/_/    \\__,_/_/ /_/\\___/_/\n'
+printf '%b\n' "${RESET}"
 
 install_base_dependencies
 ensure_docker
 checkout_panel
 
-info "Executando a instalacao completa do painel..."
+info "Executando a instalação completa do Astra Panel..."
 exec bash "${INSTALL_DIR}/scripts/install-codespaces.sh"

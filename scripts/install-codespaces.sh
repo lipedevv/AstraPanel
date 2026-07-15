@@ -8,17 +8,22 @@ readonly STATE_DIR="${PROJECT_DIR}/.codespaces"
 readonly ENV_FILE="${STATE_DIR}/.env"
 readonly ADMIN_MARKER="${STATE_DIR}/admin-created"
 readonly CREDENTIALS_FILE="${STATE_DIR}/credentials.txt"
+readonly UI_LIBRARY="${PROJECT_DIR}/scripts/lib/astra-ui.sh"
+
+[[ -f "${UI_LIBRARY}" ]] || { printf 'Biblioteca visual do Astra Panel não encontrada.\n' >&2; exit 1; }
+# shellcheck disable=SC1090
+source "${UI_LIBRARY}"
+export ASTRA_LOG_FILE="${STATE_DIR}/logs/install.log"
 
 declare APP_URL ADMIN_EMAIL ADMIN_PASSWORD ADMIN_USERNAME PTERO_PORT
 declare -a COMPOSE DOCKER
 
 info() {
-  printf '\n[Pterodactyl Codespaces] %s\n' "$1"
+  astra_info "$1"
 }
 
 fail() {
-  printf '\n[Pterodactyl Codespaces] ERRO: %s\n' "$1" >&2
-  exit 1
+  astra_fail "$1"
 }
 
 random_hex() {
@@ -47,7 +52,7 @@ select_docker_command() {
 create_environment() {
   local admin_email admin_password admin_username app_url db_password db_root_password ptero_port
 
-  mkdir -p "${STATE_DIR}/database" "${STATE_DIR}/redis" "${STATE_DIR}/panel-var" "${STATE_DIR}/logs"
+  mkdir -p "${STATE_DIR}/database" "${STATE_DIR}/redis" "${STATE_DIR}/panel-var" "${STATE_DIR}/logs" "${STATE_DIR}/backups"
 
   if [[ -f "${ENV_FILE}" ]]; then
     return
@@ -79,6 +84,8 @@ create_environment() {
 
   umask 077
   {
+    printf 'APP_NAME="Astra Panel"\n'
+    printf 'APP_LOCALE=pt-BR\n'
     printf 'PTERO_PORT=%s\n' "${ptero_port}"
     printf 'APP_URL=%s\n' "${app_url}"
     printf 'APP_TIMEZONE=America/Sao_Paulo\n'
@@ -91,6 +98,11 @@ create_environment() {
   chmod 600 "${ENV_FILE}"
 }
 
+upgrade_environment() {
+  grep -q '^APP_NAME=' "${ENV_FILE}" || printf 'APP_NAME="Astra Panel"\n' >> "${ENV_FILE}"
+  grep -q '^APP_LOCALE=' "${ENV_FILE}" || printf 'APP_LOCALE=pt-BR\n' >> "${ENV_FILE}"
+}
+
 load_environment() {
   set -a
   # shellcheck disable=SC1090
@@ -101,7 +113,7 @@ load_environment() {
 wait_for_panel() {
   local attempt
 
-  info "Aguardando o painel concluir as migrations..."
+  info "Aguardando o Astra Panel concluir as migrations..."
   for ((attempt = 1; attempt <= 150; attempt++)); do
     if curl -fsS --max-time 5 "http://127.0.0.1:${PTERO_PORT}/" >/dev/null 2>&1; then
       return
@@ -118,8 +130,7 @@ create_admin() {
     return
   fi
 
-  info "Criando o primeiro administrador..."
-  "${COMPOSE[@]}" exec -T panel php artisan p:user:make \
+  astra_run "Criando o primeiro administrador" "${COMPOSE[@]}" exec -T panel php artisan p:user:make \
     --email="${ADMIN_EMAIL}" \
     --username="${ADMIN_USERNAME}" \
     --name-first="Admin" \
@@ -127,8 +138,15 @@ create_admin() {
     --password="${ADMIN_PASSWORD}" \
     --admin=1
 
+  set_admin_locale
   touch "${ADMIN_MARKER}"
   chmod 600 "${ADMIN_MARKER}"
+}
+
+set_admin_locale() {
+  "${COMPOSE[@]}" exec -T database mariadb \
+    --user=pterodactyl --password="${DB_PASSWORD}" --database=panel \
+    --execute="UPDATE users SET language='${APP_LOCALE}' WHERE email='${ADMIN_EMAIL}';" >/dev/null
 }
 
 write_credentials() {
@@ -146,23 +164,27 @@ command -v docker >/dev/null 2>&1 || fail "O comando docker nao esta instalado."
 [[ -f "${COMPOSE_FILE}" ]] || fail "Arquivo docker-compose.codespaces.yml nao encontrado."
 
 select_docker_command
+astra_banner
+astra_section "Preparando o ambiente"
 create_environment
+upgrade_environment
 load_environment
 
 COMPOSE=("${DOCKER[@]}" compose --project-name pterodactyl-codespaces --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}")
 
-info "Baixando e iniciando o Pterodactyl Panel oficial v1.14.1..."
-"${COMPOSE[@]}" up --detach
+astra_section "Construindo o Astra Panel"
+astra_run "Compilando interface, identidade e idiomas" "${COMPOSE[@]}" build panel
+astra_run "Iniciando banco, cache e painel" "${COMPOSE[@]}" up --detach
 
 wait_for_panel
 create_admin
 write_credentials
 
-printf '\n========================================\n'
-printf ' Pterodactyl Panel pronto no Codespaces\n'
-printf '========================================\n'
+astra_section "Instalação concluída"
+astra_success "Astra Panel está pronto no Codespaces"
 printf 'URL:    %s\n' "${APP_URL}"
 printf 'E-mail: %s\n' "${ADMIN_EMAIL}"
 printf 'Senha:  %s\n' "${ADMIN_PASSWORD}"
 printf '\nAs credenciais tambem estao em %s\n' "${CREDENTIALS_FILE}"
 printf '\nNode Wings opcional: bash %s/scripts/install-node-codespaces.sh\n' "${PROJECT_DIR}"
+printf 'Atualizações futuras: bash %s/scripts/update-codespaces.sh\n' "${PROJECT_DIR}"

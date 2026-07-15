@@ -7,13 +7,19 @@ import I18NextMultiloadBackendAdapter from 'i18next-multiload-backend-adapter';
 // doing cache busting. Otherwise just use the builder provided hash value in
 // the URL to allow cache busting to occur whenever the front-end is rebuilt.
 const hash = module.hot ? Date.now().toString(16) : process.env.WEBPACK_BUILD_HASH;
+const runtimeWindow = window as typeof window & {
+    PterodactylUser?: { language?: string };
+    SiteConfiguration?: { locale?: string };
+};
+const locale = runtimeWindow.PterodactylUser?.language || runtimeWindow.SiteConfiguration?.locale || 'pt-BR';
 
 i18n.use(I18NextMultiloadBackendAdapter)
     .use(initReactI18next)
     .init({
         debug: process.env.DEBUG === 'true',
-        lng: 'en',
+        lng: locale,
         fallbackLng: 'en',
+        load: 'currentOnly',
         keySeparator: '.',
         backend: {
             backend: I18NextHttpBackend,
