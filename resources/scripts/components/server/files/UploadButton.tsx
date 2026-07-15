@@ -1,6 +1,4 @@
-import axios, { AxiosProgressEvent } from 'axios';
 import http from '@/api/http';
-import getFileUploadUrl from '@/api/server/files/getFileUploadUrl';
 import tw from 'twin.macro';
 import { Button } from '@/components/elements/button/index';
 import React, { useEffect, useRef } from 'react';
@@ -18,7 +16,7 @@ import { useSignal } from '@preact/signals-react';
 // Azure Dev Tunnels, which powers Codespaces port forwarding, rejects HTTP
 // request bodies larger than 16 MiB. Keep each request comfortably below that
 // limit and let the Panel stream the assembled file to Wings internally.
-const CODESPACES_CHUNK_SIZE = 8 * 1024 * 1024;
+const CODESPACES_CHUNK_SIZE = 14 * 1024 * 1024;
 
 function isFileOrDirectory(event: DragEvent): boolean {
     if (!event.dataTransfer?.types) {
@@ -63,10 +61,6 @@ export default ({ className }: WithClassname) => {
         return () => timeouts.value.forEach(clearTimeout);
     }, []);
 
-    const onUploadProgress = (data: AxiosProgressEvent, name: string) => {
-        setUploadProgress({ name, loaded: data.loaded });
-    };
-
     const uploadInChunks = async (file: File, controller: AbortController) => {
         const chunks = Math.ceil(file.size / CODESPACES_CHUNK_SIZE);
         const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
@@ -81,13 +75,27 @@ export default ({ className }: WithClassname) => {
             body.append('directory', directory);
             body.append('chunk', file.slice(offset, offset + CODESPACES_CHUNK_SIZE), `${file.name}.part`);
 
-            await http.post(`/api/client/servers/${uuid}/files/upload/chunk`, body, {
-                signal: controller.signal,
-                timeout: 0,
-                headers: { 'Content-Type': 'multipart/form-data' },
-                onUploadProgress: (data) =>
-                    setUploadProgress({ name: file.name, loaded: Math.min(file.size, offset + data.loaded) }),
-            });
+            const sendChunk = () =>
+                http.post(`/api/client/servers/${uuid}/files/upload/chunk`, body, {
+                    signal: controller.signal,
+                    timeout: 0,
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                    onUploadProgress: (data) =>
+                        setUploadProgress({ name: file.name, loaded: Math.min(file.size, offset + data.loaded) }),
+                });
+
+            try {
+                await sendChunk();
+            } catch (error) {
+                if (index !== chunks - 1 || controller.signal.aborted) {
+                    throw error;
+                }
+
+                // The final request also hands the assembled file to Wings. Retry
+                // that handoff once without uploading all previous chunks again.
+                await new Promise((resolve) => setTimeout(resolve, 1200));
+                await sendChunk();
+            }
         }
     };
 
@@ -106,21 +114,7 @@ export default ({ className }: WithClassname) => {
             });
 
             return () => {
-                const upload =
-                    file.size > CODESPACES_CHUNK_SIZE
-                        ? uploadInChunks(file, controller)
-                        : getFileUploadUrl(uuid).then((url) =>
-                              axios.post(
-                                  url,
-                                  { files: file },
-                                  {
-                                      signal: controller.signal,
-                                      headers: { 'Content-Type': 'multipart/form-data' },
-                                      params: { directory },
-                                      onUploadProgress: (data) => onUploadProgress(data, file.name),
-                                  }
-                              )
-                          );
+                const upload = uploadInChunks(file, controller);
 
                 return upload.then(() => timeouts.value.push(setTimeout(() => removeFileUpload(file.name), 500)));
             };

@@ -29,49 +29,46 @@ export default () => {
 
     const navigation = (
         <>
-            <div className={'px-5 pt-5 pb-4'}>
-                <Link to={'/'} className={'block no-underline'}>
-                    <img src={'/assets/svgs/astra.svg'} alt={name} className={'w-44 h-auto'} />
+            <div className={'astra-brand'}>
+                <Link to={'/'} className={'block no-underline'} title={'Astra Panel'}>
+                    <img src={'/assets/svgs/astra.svg'} alt={name} className={'astra-brand-full'} />
+                    <img src={'/assets/svgs/astra-mark.svg'} alt={name} className={'astra-brand-mark'} />
                 </Link>
-                <div
-                    className={'mt-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.24em] text-neutral-400'}
-                >
+                <div className={'astra-control-label'}>
                     <span className={'h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,.9)]'} />
                     Control center
                 </div>
             </div>
 
-            <div className={'px-4'}>
+            <div className={'astra-search-wrap'} title={'Buscar servidor'}>
                 <SearchContainer />
             </div>
 
-            <nav className={'mt-6 flex-1 px-4'}>
-                <p className={'px-3 mb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-neutral-500'}>
-                    Navegação
-                </p>
-                <NavLink to={'/'} exact className={'astra-nav-item'} activeClassName={'active'}>
+            <nav className={'astra-main-nav'}>
+                <p className={'astra-nav-heading'}>Navegação</p>
+                <NavLink to={'/'} exact className={'astra-nav-item'} activeClassName={'active'} title={'Visão geral'}>
                     <span className={'astra-nav-icon'}>
                         <FontAwesomeIcon icon={faLayerGroup} />
                     </span>
-                    <span>Visão geral</span>
+                    <span className={'astra-nav-label'}>Visão geral</span>
                 </NavLink>
-                <NavLink to={'/account'} className={'astra-nav-item'} activeClassName={'active'}>
+                <NavLink to={'/account'} className={'astra-nav-item'} activeClassName={'active'} title={'Minha conta'}>
                     <span className={'astra-nav-icon'}>
                         <FontAwesomeIcon icon={faUserCircle} />
                     </span>
-                    <span>Minha conta</span>
+                    <span className={'astra-nav-label'}>Minha conta</span>
                 </NavLink>
                 {user.rootAdmin && (
-                    <a href={'/admin'} rel={'noreferrer'} className={'astra-nav-item'}>
+                    <a href={'/admin'} rel={'noreferrer'} className={'astra-nav-item'} title={'Administração'}>
                         <span className={'astra-nav-icon'}>
                             <FontAwesomeIcon icon={faCogs} />
                         </span>
-                        <span>Administração</span>
+                        <span className={'astra-nav-label'}>Administração</span>
                     </a>
                 )}
             </nav>
 
-            <div className={'m-4 mt-6 rounded-2xl border border-white/5 bg-white/[0.035] p-3'}>
+            <div className={'astra-user-card'}>
                 <div className={'flex min-w-0 items-center gap-3'}>
                     <span
                         className={
@@ -82,7 +79,7 @@ export default () => {
                             <Avatar.User />
                         </span>
                     </span>
-                    <div className={'min-w-0 flex-1'}>
+                    <div className={'astra-user-details'}>
                         <p className={'truncate text-sm font-semibold text-neutral-100'}>{user.username}</p>
                         <p className={'truncate text-xs text-neutral-500'}>{user.email}</p>
                     </div>

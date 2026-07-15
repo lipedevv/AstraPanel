@@ -32,22 +32,15 @@ const ServerConsoleContainer = () => {
                         : 'This server is currently being transferred to another node and all actions are unavailable.'}
                 </Alert>
             )}
-            <div className={'astra-panel-card relative mb-5 grid grid-cols-4 gap-4 overflow-hidden p-5 sm:p-6'}>
-                <div
-                    className={
-                        'pointer-events-none absolute -right-12 -top-20 h-44 w-44 rounded-full bg-cyan-400/10 blur-3xl'
-                    }
-                />
-                <div className={'relative col-span-4 sm:col-span-2 lg:col-span-3'}>
+            <div className={'astra-panel-card mb-5 grid grid-cols-4 gap-4 p-5'}>
+                <div className={'col-span-4 sm:col-span-2 lg:col-span-3'}>
                     <div
                         className={
-                            'mb-2 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-400'
+                            'mb-2 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500'
                         }
                     >
-                        <span
-                            className={'h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,.8)]'}
-                        />
-                        Servidor conectado
+                        <span className={'h-1.5 w-1.5 rounded-full bg-cyan-400'} />
+                        Console do servidor
                     </div>
                     <h1
                         className={
@@ -60,7 +53,7 @@ const ServerConsoleContainer = () => {
                         {description || 'Gerenciado pelo Astra Panel'}
                     </p>
                 </div>
-                <div className={'relative col-span-4 sm:col-span-2 lg:col-span-1 self-center'}>
+                <div className={'col-span-4 self-center sm:col-span-2 lg:col-span-1'}>
                     <Can action={['control.start', 'control.stop', 'control.restart']} matchAny>
                         <PowerButtons className={'flex sm:justify-end space-x-2'} />
                     </Can>

@@ -57,62 +57,32 @@ export default () => {
         <PageContentBlock title={'Visão geral | Astra Panel'} showFlashKey={'dashboard'}>
             <section
                 className={
-                    'relative mb-8 overflow-hidden rounded-3xl border border-white/[0.07] bg-neutral-800/70 px-6 py-7 sm:px-8 sm:py-9'
+                    'mb-8 flex flex-col justify-between gap-6 border-b border-white/[0.07] pb-7 sm:flex-row sm:items-end'
                 }
             >
-                <div
-                    className={
-                        'pointer-events-none absolute -right-20 -top-32 h-72 w-72 rounded-full bg-purple-500/20 blur-3xl'
-                    }
-                />
-                <div
-                    className={
-                        'pointer-events-none absolute right-24 top-8 h-40 w-40 rounded-full bg-cyan-400/10 blur-3xl'
-                    }
-                />
-                <div className={'relative flex flex-col justify-between gap-7 md:flex-row md:items-end'}>
-                    <div>
-                        <div
-                            className={
-                                'mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-300/10 bg-cyan-400/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-300'
-                            }
-                        >
-                            <span
-                                className={
-                                    'h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,.8)]'
-                                }
-                            />
-                            Astra Control Center
-                        </div>
-                        <h1 className={'text-3xl font-semibold text-white sm:text-4xl'}>
-                            Olá,{' '}
-                            <span
-                                className={'bg-gradient-to-r from-cyan-300 to-purple-400 bg-clip-text text-transparent'}
-                            >
-                                {username}
-                            </span>
-                        </h1>
-                        <p className={'mt-3 max-w-xl text-sm leading-relaxed text-neutral-400 sm:text-base'}>
-                            Gerencie seus servidores, acompanhe recursos e mantenha tudo sob controle em um só lugar.
-                        </p>
-                    </div>
+                <div>
                     <div
                         className={
-                            'flex min-w-[180px] items-center gap-4 rounded-2xl border border-white/[0.07] bg-black/20 px-5 py-4 backdrop-blur'
+                            'mb-2 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-400'
                         }
                     >
-                        <div
-                            className={
-                                'flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-400/10 text-xl text-cyan-300'
-                            }
-                        >
-                            ◈
-                        </div>
-                        <div>
-                            <p className={'text-2xl font-semibold text-white'}>{servers?.pagination.total || 0}</p>
-                            <p className={'text-xs uppercase tracking-wider text-neutral-500'}>Servidores</p>
-                        </div>
+                        <span className={'h-1.5 w-1.5 rounded-full bg-cyan-400'} />
+                        Visão geral
                     </div>
+                    <h1 className={'text-2xl font-semibold text-white sm:text-3xl'}>
+                        Olá, <span className={'text-neutral-100'}>{username}</span>
+                    </h1>
+                    <p className={'mt-3 max-w-xl text-sm leading-relaxed text-neutral-400 sm:text-base'}>
+                        Gerencie seus servidores, acompanhe recursos e mantenha tudo sob controle em um só lugar.
+                    </p>
+                </div>
+                <div
+                    className={
+                        'min-w-[140px] rounded-xl border border-white/[0.07] bg-white/[0.025] px-4 py-3 sm:text-right'
+                    }
+                >
+                    <p className={'text-2xl font-semibold text-white'}>{servers?.pagination.total || 0}</p>
+                    <p className={'text-xs uppercase tracking-wider text-neutral-500'}>Servidores</p>
                 </div>
             </section>
 

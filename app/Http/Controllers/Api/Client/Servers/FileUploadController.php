@@ -4,20 +4,20 @@ namespace Pterodactyl\Http\Controllers\Api\Client\Servers;
 
 use Carbon\CarbonImmutable;
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\BadResponseException;
+use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Support\Facades\Log;
 use Pterodactyl\Models\User;
 use Pterodactyl\Enum\JwtScope;
 use Pterodactyl\Models\Server;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Pterodactyl\Services\Nodes\NodeJWTService;
 use Pterodactyl\Http\Controllers\Api\Client\ClientApiController;
 use Pterodactyl\Http\Requests\Api\Client\Servers\Files\UploadFileRequest;
 
 class FileUploadController extends ClientApiController
 {
-    private const MAX_CODESPACES_CHUNK_SIZE = 12 * 1024 * 1024;
+    private const MAX_CODESPACES_CHUNK_SIZE = 15 * 1024 * 1024;
 
     /**
      * FileUploadController constructor.
@@ -95,40 +95,56 @@ class FileUploadController extends ClientApiController
             }
         }
 
+        $isCompletedUploadRetry = $index === $total - 1
+            && (int) $metadata['next_chunk'] === $total
+            && is_file($partPath);
+
         if (
             $metadata['file_name'] !== $fileName
             || $metadata['directory'] !== $directory
             || (int) $metadata['chunks_total'] !== $total
-            || (int) $metadata['next_chunk'] !== $index
+            || (!$isCompletedUploadRetry && (int) $metadata['next_chunk'] !== $index)
         ) {
             throw ValidationException::withMessages(['chunk_index' => 'The file chunks were received out of order.']);
         }
 
-        $input = fopen($request->file('chunk')->getRealPath(), 'rb');
-        $output = fopen($partPath, 'ab');
-        if ($input === false || $output === false) {
-            throw new \RuntimeException('Could not open the temporary upload file.');
-        }
-        try {
-            if (!flock($output, LOCK_EX) || stream_copy_to_stream($input, $output) === false) {
-                throw new \RuntimeException('Could not store the uploaded file chunk.');
+        if (!$isCompletedUploadRetry) {
+            $input = fopen($request->file('chunk')->getRealPath(), 'rb');
+            $output = fopen($partPath, 'ab');
+            if ($input === false || $output === false) {
+                if (is_resource($input)) {
+                    fclose($input);
+                }
+                if (is_resource($output)) {
+                    fclose($output);
+                }
+                throw new \RuntimeException('Could not open the temporary upload file.');
             }
-            fflush($output);
-            flock($output, LOCK_UN);
-        } finally {
-            fclose($input);
-            fclose($output);
-        }
+            try {
+                if (!flock($output, LOCK_EX) || stream_copy_to_stream($input, $output) === false) {
+                    throw new \RuntimeException('Could not store the uploaded file chunk.');
+                }
+                fflush($output);
+                flock($output, LOCK_UN);
+            } finally {
+                if (is_resource($input)) {
+                    fclose($input);
+                }
+                if (is_resource($output)) {
+                    fclose($output);
+                }
+            }
 
-        if (filesize($partPath) > $maximumSize) {
-            $this->deleteUpload($partPath, $metadataPath);
-            throw ValidationException::withMessages([
-                'chunk' => sprintf('The file is larger than the node upload limit of %d MB.', $server->node->upload_size),
-            ]);
-        }
+            if (filesize($partPath) > $maximumSize) {
+                $this->deleteUpload($partPath, $metadataPath);
+                throw ValidationException::withMessages([
+                    'chunk' => sprintf('The file is larger than the node upload limit of %d MB.', $server->node->upload_size),
+                ]);
+            }
 
-        $metadata['next_chunk'] = $index + 1;
-        file_put_contents($metadataPath, json_encode($metadata, JSON_THROW_ON_ERROR), LOCK_EX);
+            $metadata['next_chunk'] = $index + 1;
+            file_put_contents($metadataPath, json_encode($metadata, JSON_THROW_ON_ERROR), LOCK_EX);
+        }
 
         if ($metadata['next_chunk'] < $total) {
             return new JsonResponse(['completed' => false, 'next_chunk' => $metadata['next_chunk']]);
@@ -136,9 +152,22 @@ class FileUploadController extends ClientApiController
 
         try {
             $this->sendCompletedUpload($server, $request->user(), $partPath, $fileName, $directory);
-        } finally {
-            $this->deleteUpload($partPath, $metadataPath);
+        } catch (\Throwable $exception) {
+            Log::error('Astra Panel could not hand an assembled upload to Wings.', [
+                'server_uuid' => $server->uuid,
+                'upload_id' => $data['upload_id'],
+                'file_name' => $fileName,
+                'exception' => $exception,
+            ]);
+
+            throw ValidationException::withMessages([
+                'chunk' => sprintf(
+                    'O arquivo chegou ao painel, mas o Wings não conseguiu recebê-lo. Detalhe: %s',
+                    $exception->getMessage()
+                ),
+            ]);
         }
+        $this->deleteUpload($partPath, $metadataPath);
 
         return new JsonResponse(['completed' => true]);
     }
@@ -176,21 +205,30 @@ class FileUploadController extends ClientApiController
         }
 
         try {
-            (new Client())->post('http://wings:8080/upload/file', [
+            $response = (new Client())->post('http://astra-panel-wings:8080/upload/file', [
                 'query' => ['token' => $this->getUploadToken($server, $user), 'directory' => $directory],
                 'multipart' => [['name' => 'files', 'contents' => $stream, 'filename' => $fileName]],
                 'connect_timeout' => 10,
                 'timeout' => 0,
+                'expect' => false,
+                'http_errors' => false,
             ]);
-        } catch (BadResponseException $exception) {
-            $body = (string) $exception->getResponse()->getBody();
-            $decoded = json_decode($body, true);
-            throw new BadRequestHttpException(
-                is_array($decoded) && isset($decoded['error']) ? $decoded['error'] : 'Wings rejected the assembled upload.',
-                $exception
-            );
+
+            if ($response->getStatusCode() >= 400) {
+                $body = (string) $response->getBody();
+                $decoded = json_decode($body, true);
+                throw new \RuntimeException(
+                    is_array($decoded) && isset($decoded['error'])
+                        ? (string) $decoded['error']
+                        : sprintf('Wings rejected the assembled upload with HTTP %d.', $response->getStatusCode())
+                );
+            }
+        } catch (GuzzleException $exception) {
+            throw new \RuntimeException('Could not connect to the internal Wings upload service.', 0, $exception);
         } finally {
-            fclose($stream);
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
         }
     }
 

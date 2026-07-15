@@ -12,6 +12,7 @@ LABEL org.opencontainers.image.title="Astra Panel" \
       org.opencontainers.image.description="Astra Panel para GitHub Codespaces"
 COPY --from=assets /build/public/assets /app/public/assets
 COPY public/assets/svgs/astra.svg /app/public/assets/svgs/astra.svg
+COPY public/assets/svgs/astra-mark.svg /app/public/assets/svgs/astra-mark.svg
 COPY resources/views /app/resources/views
 COPY resources/lang /app/resources/lang
 COPY app/Traits/Helpers/AvailableLanguages.php /app/app/Traits/Helpers/AvailableLanguages.php

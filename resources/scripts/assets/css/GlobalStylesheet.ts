@@ -18,10 +18,7 @@ export default createGlobalStyle`
         letter-spacing: 0.008em;
         min-height: 100vh;
         background-color: #070b14;
-        background-image:
-            radial-gradient(circle at 78% -10%, rgba(168, 85, 247, 0.16), transparent 30rem),
-            radial-gradient(circle at 22% 8%, rgba(34, 211, 238, 0.12), transparent 28rem),
-            linear-gradient(180deg, #080d18 0%, #070b14 45%, #060912 100%);
+        background-image: linear-gradient(180deg, #090e19 0%, #070b14 100%);
         background-attachment: fixed;
     }
 
@@ -30,7 +27,7 @@ export default createGlobalStyle`
         position: fixed;
         inset: 0;
         pointer-events: none;
-        opacity: 0.24;
+        opacity: 0.08;
         background-image: linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
         background-size: 36px 36px;
         mask-image: linear-gradient(to bottom, black, transparent 72%);
@@ -65,14 +62,50 @@ export default createGlobalStyle`
 
     .astra-sidebar {
         ${tw`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-white/5 transition-transform duration-250 lg:sticky lg:top-0 lg:h-screen lg:flex-shrink-0`};
-        background: linear-gradient(180deg, rgba(13, 20, 35, 0.98), rgba(7, 11, 20, 0.98));
-        box-shadow: 24px 0 70px rgba(0, 0, 0, 0.18);
+        background: #0a101d;
+        box-shadow: 16px 0 40px rgba(0, 0, 0, 0.12);
     }
 
     .astra-mobile-header {
         ${tw`sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/5 px-4`};
         background: rgba(8, 13, 24, 0.9);
         backdrop-filter: blur(18px);
+    }
+
+    .astra-brand {
+        ${tw`px-5 pb-4 pt-5`};
+    }
+
+    .astra-brand-full {
+        ${tw`h-auto w-40`};
+    }
+
+    .astra-brand-mark {
+        display: none;
+    }
+
+    .astra-control-label {
+        ${tw`mt-3 flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-neutral-500`};
+    }
+
+    .astra-search-wrap {
+        ${tw`px-4`};
+    }
+
+    .astra-main-nav {
+        ${tw`mt-5 flex-1 px-4`};
+    }
+
+    .astra-nav-heading {
+        ${tw`mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-600`};
+    }
+
+    .astra-user-card {
+        ${tw`m-4 mt-5 rounded-xl border border-white/5 bg-white/[0.025] p-3`};
+    }
+
+    .astra-user-details {
+        ${tw`min-w-0 flex-1`};
     }
 
     .astra-nav-item {
@@ -86,8 +119,8 @@ export default createGlobalStyle`
 
     .astra-nav-item.active {
         ${tw`text-cyan-100`};
-        background: linear-gradient(90deg, rgba(34, 211, 238, 0.15), rgba(168, 85, 247, 0.08));
-        box-shadow: inset 0 0 0 1px rgba(103, 232, 249, 0.12), 0 10px 30px rgba(6, 182, 212, 0.05);
+        background: rgba(34, 211, 238, 0.1);
+        box-shadow: inset 0 0 0 1px rgba(103, 232, 249, 0.1);
     }
 
     .astra-nav-icon {
@@ -112,9 +145,77 @@ export default createGlobalStyle`
     }
 
     .astra-panel-card {
-        ${tw`rounded-2xl border border-white/[0.07] bg-neutral-800/70`};
-        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.18), inset 0 1px rgba(255, 255, 255, 0.025);
-        backdrop-filter: blur(12px);
+        ${tw`rounded-xl border border-white/[0.07] bg-neutral-800/70`};
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+    }
+
+    @media (min-width: 1024px) {
+        .astra-mobile-header {
+            display: none !important;
+        }
+
+        .astra-sidebar {
+            position: sticky;
+            top: 0;
+            width: 5rem;
+            height: 100vh;
+            flex-shrink: 0;
+            transform: none !important;
+        }
+
+        .astra-brand {
+            ${tw`flex items-center justify-center px-0 pb-5 pt-5`};
+        }
+
+        .astra-brand-full,
+        .astra-control-label,
+        .astra-nav-heading,
+        .astra-nav-label,
+        .astra-user-details,
+        .astra-search-trigger span,
+        .astra-search-trigger kbd {
+            display: none;
+        }
+
+        .astra-brand-mark {
+            display: block;
+            width: 2.75rem;
+            height: 2.75rem;
+        }
+
+        .astra-search-wrap,
+        .astra-main-nav {
+            ${tw`px-3`};
+        }
+
+        .astra-main-nav {
+            ${tw`mt-2`};
+        }
+
+        .astra-nav-item,
+        .astra-search-trigger {
+            ${tw`flex h-12 w-full items-center justify-center rounded-xl p-0`};
+        }
+
+        .astra-nav-item {
+            ${tw`mb-2`};
+        }
+
+        .astra-nav-icon {
+            ${tw`h-9 w-9 bg-transparent`};
+        }
+
+        .astra-user-card {
+            ${tw`m-3 flex flex-col items-center gap-2 border-0 bg-transparent p-0`};
+        }
+
+        .astra-user-card > div {
+            ${tw`flex-col gap-2`};
+        }
+
+        .astra-user-card button {
+            ${tw`h-10 w-10`};
+        }
     }
 
     input[type=number]::-webkit-outer-spin-button,

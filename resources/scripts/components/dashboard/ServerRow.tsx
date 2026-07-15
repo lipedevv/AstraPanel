@@ -14,12 +14,12 @@ const ServerCard = styled(Link)`
     min-width: 0;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 1rem;
-    padding: 1.25rem;
+    border-radius: 0.75rem;
+    padding: 1.1rem;
     color: inherit;
     text-decoration: none;
-    background: linear-gradient(145deg, rgba(17, 26, 43, 0.92), rgba(10, 16, 29, 0.92));
-    box-shadow: 0 18px 55px rgba(0, 0, 0, 0.16), inset 0 1px rgba(255, 255, 255, 0.025);
+    background: rgba(17, 26, 43, 0.78);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 
     &::before {
@@ -27,14 +27,14 @@ const ServerCard = styled(Link)`
         position: absolute;
         inset: 0 auto 0 0;
         width: 2px;
-        background: linear-gradient(180deg, #22d3ee, #a855f7);
-        opacity: 0.7;
+        background: #22d3ee;
+        opacity: 0.55;
     }
 
     &:hover {
-        transform: translateY(-3px);
-        border-color: rgba(103, 232, 249, 0.22);
-        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24), 0 0 40px rgba(6, 182, 212, 0.05);
+        transform: translateY(-1px);
+        border-color: rgba(103, 232, 249, 0.16);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
     }
 `;
 
