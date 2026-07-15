@@ -25,6 +25,22 @@ find_astra_directory() {
 command -v git >/dev/null 2>&1 || { printf 'ERRO: Git não está instalado.\n' >&2; exit 1; }
 ASTRA_DIR="$(find_astra_directory)"
 
+preserve_legacy_wings_override() {
+  local compose_file="docker-compose.wings.codespaces.yml" backup_dir backup_file
+
+  if git -C "${ASTRA_DIR}" diff --quiet HEAD -- "${compose_file}"; then
+    return
+  fi
+
+  backup_dir="${ASTRA_DIR}/.codespaces/backups"
+  backup_file="${backup_dir}/local-wings-compose-$(date +%Y%m%d-%H%M%S).patch"
+  mkdir -p "${backup_dir}"
+  git -C "${ASTRA_DIR}" diff HEAD -- "${compose_file}" > "${backup_file}"
+  git -C "${ASTRA_DIR}" restore --staged --worktree -- "${compose_file}"
+  printf 'Configuração local antiga preservada em %s\n' "${backup_file}"
+}
+
 printf '\nAtualizando os arquivos do Astra Panel em %s...\n' "${ASTRA_DIR}"
+preserve_legacy_wings_override
 git -C "${ASTRA_DIR}" pull --ff-only origin master
 exec bash "${ASTRA_DIR}/scripts/update-codespaces.sh"

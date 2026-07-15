@@ -159,6 +159,14 @@ write_credentials() {
   chmod 600 "${CREDENTIALS_FILE}"
 }
 
+publish_panel_port() {
+  printf '\nPorta do Astra Panel: http://localhost:%s\n' "${PTERO_PORT}"
+  command -v gh >/dev/null 2>&1 || return 0
+  [[ -n "${CODESPACE_NAME:-}" ]] || return 0
+  gh auth status >/dev/null 2>&1 || return 0
+  gh codespace ports visibility "${PTERO_PORT}:public" -c "${CODESPACE_NAME}" >/dev/null 2>&1 || true
+}
+
 command -v curl >/dev/null 2>&1 || fail "O comando curl nao esta instalado."
 command -v docker >/dev/null 2>&1 || fail "O comando docker nao esta instalado."
 [[ -f "${COMPOSE_FILE}" ]] || fail "Arquivo docker-compose.codespaces.yml nao encontrado."
@@ -179,6 +187,7 @@ astra_run "Iniciando banco, cache e painel" "${COMPOSE[@]}" up --detach
 wait_for_panel
 create_admin
 write_credentials
+publish_panel_port
 
 astra_section "Instalação concluída"
 astra_success "Astra Panel está pronto no Codespaces"
