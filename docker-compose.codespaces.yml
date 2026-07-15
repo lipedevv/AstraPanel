@@ -4,7 +4,6 @@ services:
   database:
     image: mariadb:11
     restart: unless-stopped
-    command: --default-authentication-plugin=mysql_native_password
     environment:
       MARIADB_DATABASE: panel
       MARIADB_USER: pterodactyl
@@ -13,7 +12,12 @@ services:
     volumes:
       - ./.codespaces/database:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test:
+        - CMD-SHELL
+        - >-
+          mariadb --protocol=tcp --host=127.0.0.1
+          --user="$${MARIADB_USER}" --password="$${MARIADB_PASSWORD}"
+          --database="$${MARIADB_DATABASE}" --execute="SELECT 1" >/dev/null 2>&1
       interval: 5s
       timeout: 5s
       retries: 30
