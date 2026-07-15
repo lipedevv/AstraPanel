@@ -24,6 +24,11 @@ public/assets/manifest.json
 docker-compose.*
 !docker-compose.example.yml
 !docker-compose.example.yaml
+!.dockerignore
+!docker-compose.codespaces.yml
+
+# Persistent data and generated credentials for GitHub Codespaces.
+/.codespaces/
 
 # for image related files
 misc

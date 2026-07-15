@@ -1,0 +1,17 @@
+{
+  "name": "Pterodactyl Panel",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "forwardPorts": [8080],
+  "portsAttributes": {
+    "8080": {
+      "label": "Pterodactyl Panel",
+      "onAutoForward": "openBrowser",
+      "protocol": "http"
+    }
+  },
+  "postCreateCommand": "bash scripts/install-codespaces.sh",
+  "remoteUser": "codespace"
+}

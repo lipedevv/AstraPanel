@@ -7,6 +7,44 @@
 
 # Pterodactyl Panel
 
+## Instalacao no GitHub Codespaces
+
+Este repositorio contem o **Pterodactyl Panel oficial v1.14.1**, sem trocar a interface, com uma camada adicional para
+executa-lo no GitHub Codespaces. O instalador prepara Docker, MariaDB e Redis, baixa a imagem oficial da mesma versao,
+executa as migrations e cria o primeiro administrador automaticamente.
+
+Em um Codespace vazio, execute somente:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/lipedevv/AstraPanel/master/install.sh | bash
+```
+
+Ao terminar, o terminal mostra a URL, o e-mail e a senha do administrador. As mesmas informacoes ficam salvas, com
+permissividade restrita, em `.codespaces/credentials.txt` dentro do clone (por padrao,
+`/workspaces/Pterodactyl/.codespaces/credentials.txt` para o comando acima).
+
+Para escolher o e-mail ou a senha antes da primeira instalacao:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/lipedevv/AstraPanel/master/install.sh \
+  | PTERO_ADMIN_EMAIL=voce@example.com PTERO_ADMIN_PASSWORD='SuaSenhaForte!' bash
+```
+
+Para consultar os containers e logs depois da instalacao:
+
+```bash
+cd /workspaces/Pterodactyl
+docker compose --env-file .codespaces/.env -f docker-compose.codespaces.yml ps
+docker compose --env-file .codespaces/.env -f docker-compose.codespaces.yml logs -f panel
+```
+
+> **Importante:** esta configuracao e indicada para desenvolvimento, demonstracao e testes do **Panel**. O GitHub
+> Codespaces pode suspender a maquina e seu encaminhamento de portas nao substitui um servidor publico permanente.
+> Para hospedar servidores de jogos com Wings em producao, use uma VPS ou servidor Linux compativel com os requisitos
+> oficiais do Pterodactyl.
+
+---
+
 Pterodactyl® is a free, open-source game server management panel built with PHP, React, and Go. Designed with security
 in mind, Pterodactyl runs all game servers in isolated Docker containers while exposing a beautiful and intuitive
 UI to end users.

@@ -1,0 +1,78 @@
+name: pterodactyl-codespaces
+
+services:
+  database:
+    image: mariadb:11
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MARIADB_DATABASE: panel
+      MARIADB_USER: pterodactyl
+      MARIADB_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD is required}"
+      MARIADB_ROOT_PASSWORD: "${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD is required}"
+    volumes:
+      - ./.codespaces/database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  cache:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - ./.codespaces/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  panel:
+    image: ghcr.io/pterodactyl/panel:v1.14.1
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+    ports:
+      - "${PTERO_PORT:-8080}:80"
+    volumes:
+      - ./.codespaces/panel-var:/app/var
+      - ./.codespaces/logs:/app/storage/logs
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_ENVIRONMENT_ONLY: "false"
+      APP_URL: "${APP_URL:?APP_URL is required}"
+      APP_TIMEZONE: "${APP_TIMEZONE:-America/Sao_Paulo}"
+      APP_SERVICE_AUTHOR: "${ADMIN_EMAIL:-admin@example.com}"
+      TRUSTED_PROXIES: "*"
+      LOG_CHANNEL: daily
+      DB_CONNECTION: mysql
+      DB_HOST: database
+      DB_PORT: "3306"
+      DB_DATABASE: panel
+      DB_USERNAME: pterodactyl
+      DB_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD is required}"
+      CACHE_DRIVER: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+      QUEUE_DRIVER: redis
+      REDIS_HOST: cache
+      REDIS_PORT: "6379"
+      HASHIDS_LENGTH: "8"
+      MAIL_MAILER: log
+      MAIL_DRIVER: log
+      MAIL_FROM_ADDRESS: "${ADMIN_EMAIL:-admin@example.com}"
+      MAIL_FROM_NAME: Pterodactyl Panel
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1/ >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 90s
