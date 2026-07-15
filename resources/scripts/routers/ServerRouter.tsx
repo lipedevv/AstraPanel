@@ -63,66 +63,69 @@ export default () => {
     }, [match.params.id]);
 
     return (
-        <React.Fragment key={'server-router'}>
+        <div key={'server-router'} className={'min-h-screen lg:flex'}>
             <NavigationBar />
-            {!uuid || !id ? (
-                error ? (
-                    <ServerError message={error} />
+            <main className={'min-w-0 flex-1'}>
+                {!uuid || !id ? (
+                    error ? (
+                        <ServerError message={error} />
+                    ) : (
+                        <Spinner size={'large'} centered />
+                    )
                 ) : (
-                    <Spinner size={'large'} centered />
-                )
-            ) : (
-                <>
-                    <CSSTransition timeout={150} classNames={'fade'} appear in>
-                        <SubNavigation>
-                            <div>
-                                {routes.server
-                                    .filter((route) => !!route.name)
-                                    .map((route) =>
-                                        route.permission ? (
-                                            <Can key={route.path} action={route.permission} matchAny>
-                                                <NavLink to={to(route.path, true)} exact={route.exact}>
+                    <>
+                        <CSSTransition timeout={150} classNames={'fade'} appear in>
+                            <SubNavigation>
+                                <div>
+                                    {routes.server
+                                        .filter((route) => !!route.name)
+                                        .map((route) =>
+                                            route.permission ? (
+                                                <Can key={route.path} action={route.permission} matchAny>
+                                                    <NavLink to={to(route.path, true)} exact={route.exact}>
+                                                        {route.name}
+                                                    </NavLink>
+                                                </Can>
+                                            ) : (
+                                                <NavLink key={route.path} to={to(route.path, true)} exact={route.exact}>
                                                     {route.name}
                                                 </NavLink>
-                                            </Can>
-                                        ) : (
-                                            <NavLink key={route.path} to={to(route.path, true)} exact={route.exact}>
-                                                {route.name}
-                                            </NavLink>
-                                        )
+                                            )
+                                        )}
+                                    {rootAdmin && (
+                                        // eslint-disable-next-line react/jsx-no-target-blank
+                                        <a href={`/admin/servers/view/${serverId}`} target={'_blank'}>
+                                            <FontAwesomeIcon icon={faExternalLinkAlt} />
+                                        </a>
                                     )}
-                                {rootAdmin && (
-                                    // eslint-disable-next-line react/jsx-no-target-blank
-                                    <a href={`/admin/servers/view/${serverId}`} target={'_blank'}>
-                                        <FontAwesomeIcon icon={faExternalLinkAlt} />
-                                    </a>
-                                )}
-                            </div>
-                        </SubNavigation>
-                    </CSSTransition>
-                    <InstallListener />
-                    <TransferListener />
-                    <WebsocketHandler />
-                    {inConflictState && (!rootAdmin || (rootAdmin && !location.pathname.endsWith(`/server/${id}`))) ? (
-                        <ConflictStateRenderer />
-                    ) : (
-                        <ErrorBoundary>
-                            <TransitionRouter>
-                                <Switch location={location}>
-                                    {routes.server.map(({ path, permission, component: Component }) => (
-                                        <PermissionRoute key={path} permission={permission} path={to(path)} exact>
-                                            <Spinner.Suspense>
-                                                <Component />
-                                            </Spinner.Suspense>
-                                        </PermissionRoute>
-                                    ))}
-                                    <Route path={'*'} component={NotFound} />
-                                </Switch>
-                            </TransitionRouter>
-                        </ErrorBoundary>
-                    )}
-                </>
-            )}
-        </React.Fragment>
+                                </div>
+                            </SubNavigation>
+                        </CSSTransition>
+                        <InstallListener />
+                        <TransferListener />
+                        <WebsocketHandler />
+                        {inConflictState &&
+                        (!rootAdmin || (rootAdmin && !location.pathname.endsWith(`/server/${id}`))) ? (
+                            <ConflictStateRenderer />
+                        ) : (
+                            <ErrorBoundary>
+                                <TransitionRouter>
+                                    <Switch location={location}>
+                                        {routes.server.map(({ path, permission, component: Component }) => (
+                                            <PermissionRoute key={path} permission={permission} path={to(path)} exact>
+                                                <Spinner.Suspense>
+                                                    <Component />
+                                                </Spinner.Suspense>
+                                            </PermissionRoute>
+                                        ))}
+                                        <Route path={'*'} component={NotFound} />
+                                    </Switch>
+                                </TransitionRouter>
+                            </ErrorBoundary>
+                        )}
+                    </>
+                )}
+            </main>
+        </div>
     );
 };

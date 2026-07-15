@@ -11,15 +11,20 @@ interface Props {
 }
 
 const ButtonStyle = styled.button<Omit<Props, 'isLoading'>>`
-    ${tw`relative inline-block rounded p-2 uppercase tracking-wide text-sm transition-all duration-150 border`};
+    ${tw`relative inline-block rounded-xl p-2 uppercase tracking-wide text-sm font-semibold transition-all duration-150 border`};
 
     ${(props) =>
         ((!props.isSecondary && !props.color) || props.color === 'primary') &&
         css<Props>`
             ${(props) => !props.isSecondary && tw`bg-primary-500 border-primary-600 border text-primary-50`};
+            ${(props) =>
+                !props.isSecondary &&
+                'background: linear-gradient(135deg, #06b6d4, #7c3aed); border-color: rgba(103, 232, 249, .18); box-shadow: 0 12px 28px rgba(6, 182, 212, .16);'};
 
             &:hover:not(:disabled) {
-                ${tw`bg-primary-600 border-primary-700`};
+                ${tw`border-primary-300`};
+                filter: brightness(1.08);
+                transform: translateY(-1px);
             }
         `};
 

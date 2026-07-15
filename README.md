@@ -13,6 +13,9 @@ O **Astra Panel** e uma distribuicao do Pterodactyl v1.14.1 preparada para GitHu
 do projeto original e adiciona identidade Astra, portugues do Brasil como idioma padrao, espanhol e ingles, alem de
 instalacao, atualizacao, banco MariaDB, Redis e primeiro administrador totalmente automatizados.
 
+A interface Astra substitui o visual classico por um dashboard responsivo com sidebar, menu movel, cards de
+servidores em tempo real, login renovado e componentes modernos em todas as paginas do cliente.
+
 Em um Codespace vazio, execute somente:
 
 ```bash

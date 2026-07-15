@@ -13,7 +13,17 @@ export default () => {
     const { path } = useRouteMatch();
 
     return (
-        <div className={'pt-8 xl:pt-32'}>
+        <div className={'relative flex min-h-screen items-center overflow-hidden py-8 sm:py-12'}>
+            <div
+                className={
+                    'pointer-events-none absolute left-[8%] top-[5%] h-72 w-72 rounded-full bg-cyan-400/10 blur-3xl'
+                }
+            />
+            <div
+                className={
+                    'pointer-events-none absolute bottom-[4%] right-[8%] h-96 w-96 rounded-full bg-purple-500/10 blur-3xl'
+                }
+            />
             <Switch location={location}>
                 <Route path={`${path}/login`} component={LoginContainer} exact />
                 <Route path={`${path}/login/checkpoint`} component={LoginCheckpointContainer} />

@@ -1,22 +1,33 @@
 const colors = require('tailwindcss/colors');
 
 const gray = {
-    50: 'hsl(216, 33%, 97%)',
-    100: 'hsl(214, 15%, 91%)',
-    200: 'hsl(210, 16%, 82%)',
-    300: 'hsl(211, 13%, 65%)',
-    400: 'hsl(211, 10%, 53%)',
-    500: 'hsl(211, 12%, 43%)',
-    600: 'hsl(209, 14%, 37%)',
-    700: 'hsl(209, 18%, 30%)',
-    800: 'hsl(209, 20%, 25%)',
-    900: 'hsl(210, 24%, 16%)',
+    50: '#f7f9fc',
+    100: '#e8edf5',
+    200: '#cdd6e5',
+    300: '#aab7cb',
+    400: '#7f8da6',
+    500: '#596981',
+    600: '#394860',
+    700: '#202c40',
+    800: '#111a2b',
+    900: '#080d18',
+};
+
+const astra = {
+    50: '#effcff',
+    100: '#cff8fe',
+    200: '#a5effc',
+    300: '#67e3f7',
+    400: '#22d3ee',
+    500: '#06b6d4',
+    600: '#0891b2',
+    700: '#0e7490',
+    800: '#155e75',
+    900: '#164e63',
 };
 
 module.exports = {
-    content: [
-        './resources/scripts/**/*.{js,ts,tsx}',
-    ],
+    content: ['./resources/scripts/**/*.{js,ts,tsx}'],
     theme: {
         extend: {
             fontFamily: {
@@ -26,7 +37,8 @@ module.exports = {
                 black: '#131a20',
                 // "primary" and "neutral" are deprecated, prefer the use of "blue" and "gray"
                 // in new code.
-                primary: colors.blue,
+                primary: astra,
+                blue: astra,
                 gray: gray,
                 neutral: gray,
                 cyan: colors.cyan,
@@ -37,7 +49,7 @@ module.exports = {
             transitionDuration: {
                 250: '250ms',
             },
-            borderColor: theme => ({
+            borderColor: (theme) => ({
                 default: theme('colors.neutral.400', 'currentColor'),
             }),
         },
@@ -47,5 +59,5 @@ module.exports = {
         require('@tailwindcss/forms')({
             strategy: 'class',
         }),
-    ]
+    ],
 };
