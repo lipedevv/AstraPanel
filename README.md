@@ -38,7 +38,32 @@ docker compose --env-file .codespaces/.env -f docker-compose.codespaces.yml ps
 docker compose --env-file .codespaces/.env -f docker-compose.codespaces.yml logs -f panel
 ```
 
-> **Importante:** esta configuracao e indicada para desenvolvimento, demonstracao e testes do **Panel**. O GitHub
+### Node Wings opcional
+
+Depois que o Panel estiver instalado, o comando abaixo registra um node basico, inicia o Wings oficial e cria as
+allocations `25565-25575`:
+
+```bash
+cd /workspaces/Pterodactyl
+git pull --ff-only
+bash scripts/install-node-codespaces.sh
+```
+
+O script usa os recursos disponiveis no Codespace, configura a porta HTTPS do Wings e valida a conexao autenticada
+entre o Panel e o node. A porta `8081` precisa ficar publica para que o Panel consiga acessar o Wings; o instalador
+tenta fazer isso automaticamente com o GitHub CLI. Se a visibilidade voltar para privada depois de reiniciar o
+Codespace, execute o mesmo script novamente.
+
+As allocations podem executar containers de jogos. Para acessar uma porta TCP somente do seu computador, use o
+GitHub CLI local, mantendo o comando aberto, e conecte o jogo em `localhost`:
+
+```bash
+gh codespace ports forward 25565:25565 -c NOME_DO_CODESPACE
+```
+
+Jogadores externos e jogos que dependem de UDP ainda precisam de um tunel apropriado ou de uma VPS.
+
+> **Importante:** esta configuracao e indicada para desenvolvimento, demonstracao e testes do **Panel e Wings**. O GitHub
 > Codespaces pode suspender a maquina e seu encaminhamento de portas nao substitui um servidor publico permanente.
 > Para hospedar servidores de jogos com Wings em producao, use uma VPS ou servidor Linux compativel com os requisitos
 > oficiais do Pterodactyl.

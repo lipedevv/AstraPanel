@@ -1,0 +1,24 @@
+services:
+  wings:
+    image: ghcr.io/pterodactyl/wings:v1.12.2
+    restart: unless-stopped
+    tty: true
+    depends_on:
+      panel:
+        condition: service_healthy
+    ports:
+      - "${WINGS_FORWARD_PORT:-8081}:443"
+      - "${WINGS_SFTP_PORT:-2022}:2022"
+    environment:
+      TZ: "${APP_TIMEZONE:-America/Sao_Paulo}"
+      WINGS_UID: "988"
+      WINGS_GID: "988"
+      WINGS_USERNAME: pterodactyl
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers:/var/lib/docker/containers
+      - "${WINGS_CONFIG_DIR:?WINGS_CONFIG_DIR is required}:/etc/pterodactyl"
+      - "${WINGS_STATE_DIR:?WINGS_STATE_DIR is required}:${WINGS_STATE_DIR:?WINGS_STATE_DIR is required}"
+      - "${WINGS_RUN_DIR:?WINGS_RUN_DIR is required}:/run/wings"
+      - /etc/ssl/certs:/etc/ssl/certs:ro
+      - /etc/machine-id:/etc/machine-id:ro

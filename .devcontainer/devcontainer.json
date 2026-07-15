@@ -4,11 +4,16 @@
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
-  "forwardPorts": [8080],
+  "forwardPorts": [8080, 8081],
   "portsAttributes": {
     "8080": {
       "label": "Pterodactyl Panel",
       "onAutoForward": "openBrowser",
+      "protocol": "http"
+    },
+    "8081": {
+      "label": "Pterodactyl Wings API",
+      "onAutoForward": "silent",
       "protocol": "http"
     }
   },

@@ -26,6 +26,7 @@ docker-compose.*
 !docker-compose.example.yaml
 !.dockerignore
 !docker-compose.codespaces.yml
+!docker-compose.wings.codespaces.yml
 
 # Persistent data and generated credentials for GitHub Codespaces.
 /.codespaces/
